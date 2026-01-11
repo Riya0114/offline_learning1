@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management - Rural Learning</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar (Same as index.html) -->
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fas fa-school"></i>
+            <h2>Rural Learning</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li class="active"><a href="students.html"><i class="fas fa-users"></i><span>Students</span></a></li>
+            <li><a href="attendance.html"><i class="fas fa-clipboard-check"></i><span>Attendance</span></a></li>
+            <li><a href="syllabus.html"><i class="fas fa-book-open"></i><span>Syllabus</span></a></li>
+            <li><a href="learning.html"><i class="fas fa-graduation-cap"></i><span>Learning</span></a></li>
+            <li><a href="analytics.html"><i class="fas fa-chart-bar"></i><span>Analytics</span></a></li>
+            <li><a href="offline.html"><i class="fas fa-download"></i><span>Offline Content</span></a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-students" placeholder="Search students...">
+            </div>
+            <button class="btn-primary" onclick="showAddStudentModal()">
+                <i class="fas fa-user-plus"></i> Add Student
+            </button>
+        </header>
+
+        <div class="dashboard-container">
+            <div class="section-header">
+                <h1>Student Management</h1>
+                <div class="filter-controls">
+                    <select id="filter-grade" onchange="filterStudents()">
+                        <option value="">All Grades</option>
+                        <option value="1">Grade 1</option>
+                        <option value="2">Grade 2</option>
+                        <option value="3">Grade 3</option>
+                        <option value="4">Grade 4</option>
+                        <option value="5">Grade 5</option>
+                    </select>
+                    <select id="filter-village" onchange="filterStudents()">
+                        <option value="">All Villages</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Student Statistics -->
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #4CAF50;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-students-count">0</h3>
+                        <p>Total Students</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #2196F3;">
+                        <i class="fas fa-male"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="male-count">0</h3>
+                        <p>Male Students</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #E91E63;">
+                        <i class="fas fa-female"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="female-count">0</h3>
+                        <p>Female Students</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #FF9800;">
+                        <i class="fas fa-school"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="villages-count">0</h3>
+                        <p>Villages</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Table -->
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Grade</th>
+                            <th>Village</th>
+                            <th>Contact</th>
+                            <th>Attendance</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="students-table-body">
+                        <tr>
+                            <td colspan="9" class="loading">Loading students...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button id="prev-page" disabled onclick="changePage(-1)">Previous</button>
+                <span id="page-info">Page 1 of 1</span>
+                <button id="next-page" disabled onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Student Modal -->
+    <div id="add-student-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Student</h2>
+                <button class="close-modal" onclick="closeModal('add-student-modal')">&times;</button>
+            </div>
+            <form id="student-form" onsubmit="saveStudent(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-student-name">Full Name *</label>
+                        <input type="text" id="new-student-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-student-age">Age</label>
+                        <input type="number" id="new-student-age" min="5" max="18">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-student-grade">Grade *</label>
+                        <select id="new-student-grade" required>
+                            <option value="">Select Grade</option>
+                            <option value="1">Grade 1</option>
+                            <option value="2">Grade 2</option>
+                            <option value="3">Grade 3</option>
+                            <option value="4">Grade 4</option>
+                            <option value="5">Grade 5</option>
+                            <option value="6">Grade 6</option>
+                            <option value="7">Grade 7</option>
+                            <option value="8">Grade 8</option>
+                            <option value="9">Grade 9</option>
+                            <option value="10">Grade 10</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-student-village">Village *</label>
+                        <input type="text" id="new-student-village" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-student-school">School</label>
+                        <input type="text" id="new-student-school">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-student-contact">Contact Number</label>
+                        <input type="tel" id="new-student-contact" pattern="[0-9]{10}">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="new-student-learning-style">Preferred Learning Style</label>
+                    <select id="new-student-learning-style">
+                        <option value="">Select Learning Style</option>
+                        <option value="visual">Visual</option>
+                        <option value="auditory">Auditory</option>
+                        <option value="kinesthetic">Kinesthetic</option>
+                        <option value="reading_writing">Reading/Writing</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('add-student-modal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Student Details Modal -->
+    <div id="student-details-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="student-details-name">Student Details</h2>
+                <button class="close-modal" onclick="closeModal('student-details-modal')">&times;</button>
+            </div>
+            <div id="student-details-content">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="students.js"></script>
+</body>
+</html>

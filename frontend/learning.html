@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Interface - Rural Learning</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .learning-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: calc(100vh - 160px);
+        }
+        
+        .learning-sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            overflow-y: auto;
+        }
+        
+        .learning-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .topic-header {
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+        
+        .topic-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .progress-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+        }
+        
+        .content-section {
+            flex: 1;
+            padding: 20px 0;
+        }
+        
+        .content-nav {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 0;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .quiz-section {
+            background: #F5F9FF;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .quiz-question {
+            margin-bottom: 20px;
+        }
+        
+        .quiz-option {
+            padding: 15px;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            border-color: var(--secondary-color);
+            background: #F0F7FF;
+        }
+        
+        .quiz-option.selected {
+            border-color: var(--secondary-color);
+            background: #E3F2FD;
+        }
+        
+        .audio-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: var(--light-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .tts-btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tts-btn:hover {
+            background: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fas fa-school"></i>
+            <h2>Rural Learning</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="students.html"><i class="fas fa-users"></i><span>Students</span></a></li>
+            <li><a href="attendance.html"><i class="fas fa-clipboard-check"></i><span>Attendance</span></a></li>
+            <li><a href="syllabus.html"><i class="fas fa-book-open"></i><span>Syllabus</span></a></li>
+            <li class="active"><a href="learning.html"><i class="fas fa-graduation-cap"></i><span>Learning</span></a></li>
+            <li><a href="analytics.html"><i class="fas fa-chart-bar"></i><span>Analytics</span></a></li>
+            <li><a href="offline.html"><i class="fas fa-download"></i><span>Offline Content</span></a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="student-selector">
+                <label for="learning-student">Student:</label>
+                <select id="learning-student">
+                    <option value="">Select Student</option>
+                </select>
+            </div>
+            <div class="learning-controls">
+                <button class="btn-secondary" onclick="pauseLearning()">
+                    <i class="fas fa-pause"></i> Pause
+                </button>
+                <button class="btn-primary" onclick="completeLearning()">
+                    <i class="fas fa-check"></i> Complete
+                </button>
+            </div>
+        </header>
+
+        <div class="dashboard-container">
+            <div class="learning-container">
+                <!-- Left Sidebar -->
+                <div class="learning-sidebar">
+                    <h3>Current Chapter</h3>
+                    <div id="current-chapter-info" class="loading">
+                        Loading chapter info...
+                    </div>
+                    
+                    <h3 style="margin-top: 30px;">Topics in this Chapter</h3>
+                    <div id="chapter-topics-list">
+                        <!-- Topics will be loaded here -->
+                    </div>
+                    
+                    <h3 style="margin-top: 30px;">Learning Resources</h3>
+                    <div id="learning-resources">
+                        <div class="resource-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Study Guide.pdf</span>
+                            <button class="btn-small"><i class="fas fa-download"></i></button>
+                        </div>
+                        <div class="resource-item">
+                            <i class="fas fa-video"></i>
+                            <span>Explanatory Video</span>
+                            <button class="btn-small"><i class="fas fa-play"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="learning-content">
+                    <div class="topic-header">
+                        <h1 id="topic-title">Loading Topic...</h1>
+                        <div class="topic-meta">
+                            <span class="difficulty-badge" id="topic-difficulty">Medium</span>
+                            <span><i class="far fa-clock"></i> <span id="topic-duration">60</span> minutes</span>
+                        </div>
+                        <div class="topic-progress">
+                            <div class="progress-circle" id="progress-circle" style="background: #4CAF50;">
+                                0%
+                            </div>
+                            <div>
+                                <h4>Learning Progress</h4>
+                                <p>Time spent: <span id="time-spent">0</span> minutes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-section">
+                        <div id="topic-content">
+                            <div class="loading">Loading content...</div>
+                        </div>
+                        
+                        <!-- Audio Controls (Google Text-to-Speech) -->
+                        <div class="audio-controls">
+                            <button class="tts-btn" onclick="speakContent()">
+                                <i class="fas fa-volume-up"></i> Listen to Content
+                            </button>
+                            <select id="voice-selector">
+                                <option value="en-US">English (US)</option>
+                                <option value="hi-IN">Hindi</option>
+                                <option value="ta-IN">Tamil</option>
+                                <option value="te-IN">Telugu</option>
+                            </select>
+                            <input type="range" id="speech-rate" min="0.5" max="2" step="0.1" value="1">
+                        </div>
+
+                        <!-- Quiz Section -->
+                        <div class="quiz-section" id="quiz-section" style="display: none;">
+                            <h3><i class="fas fa-question-circle"></i> Quick Quiz</h3>
+                            <p>Test your understanding of this topic:</p>
+                            <div id="quiz-questions">
+                                <!-- Questions will be loaded here -->
+                            </div>
+                            <div class="quiz-actions">
+                                <button class="btn-primary" onclick="submitQuiz()">Submit Quiz</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Notes Section -->
+                        <div class="notes-section">
+                            <h3><i class="fas fa-sticky-note"></i> Your Notes</h3>
+                            <textarea id="learning-notes" rows="4" placeholder="Take notes here..."></textarea>
+                            <button class="btn-small" onclick="saveNotes()">
+                                <i class="fas fa-save"></i> Save Notes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="content-nav">
+                        <button class="btn-secondary" id="prev-topic-btn" disabled>
+                            <i class="fas fa-arrow-left"></i> Previous Topic
+                        </button>
+                        <div>
+                            <button class="btn-secondary" onclick="showQuiz()">
+                                <i class="fas fa-question-circle"></i> Take Quiz
+                            </button>
+                            <button class="btn-primary" onclick="markAsCompleted()">
+                                <i class="fas fa-check-circle"></i> Mark as Completed
+                            </button>
+                        </div>
+                        <button class="btn-secondary" id="next-topic-btn" disabled>
+                            Next Topic <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learning Timer -->
+            <div class="timer-container">
+                <div class="timer-display">
+                    <i class="fas fa-clock"></i>
+                    <span id="learning-timer">00:00:00</span>
+                    <button class="btn-small" onclick="toggleTimer()" id="timer-toggle">
+                        <i class="fas fa-play"></i> Start
+                    </button>
+                </div>
+                <div class="timer-stats">
+                    <span>Today: <strong id="today-study">0</strong> min</span>
+                    <span>This week: <strong id="week-study">0</strong> hours</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Google TTS Script -->
+    <script src="https://cdn.jsdelivr.net/npm/@google-cloud/text-to-speech"></script>
+    <script src="app.js"></script>
+    <script src="learning.js"></script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Risk Prediction</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .risk-high { background-color: #fee2e2; color: #dc2626; border-left: 5px solid #dc2626; }
+        .risk-medium { background-color: #fef3c7; color: #d97706; border-left: 5px solid #d97706; }
+        .risk-low { background-color: #d1fae5; color: #059669; border-left: 5px solid #059669; }
+        .feature-input { margin: 10px 0; padding: 8px; width: 200px; }
+        .result-card { padding: 20px; margin: 20px 0; border-radius: 10px; }
+        .recommendation { padding: 10px; margin: 5px 0; background: white; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Dashboard</a>
+        <a href="/students">Students</a>
+        <a href="/risk" class="active">Risk Prediction</a>
+        <a href="/analytics">Analytics</a>
+        <!-- In your nav bars, add: -->
+<a href="/risk">Risk Prediction</a>
+    </nav>
+    
+    <div class="container">
+        <h1>🎯 Student Risk Prediction</h1>
+        
+        <!-- Model Status -->
+        <div class="card">
+            <h2>🤖 ML Model Status</h2>
+            <div id="model-status">Checking...</div>
+            <button onclick="checkModelStatus()" class="btn">🔄 Refresh Status</button>
+        </div>
+        
+        <!-- Manual Prediction -->
+        <div class="card">
+            <h2>🔍 Predict Risk Manually</h2>
+            <div>
+                <label>Attendance Rate (%):</label>
+                <input type="number" id="attendance" class="feature-input" min="0" max="100" value="85" step="1">
+            </div>
+            <div>
+                <label>Average Score (%):</label>
+                <input type="number" id="avg_score" class="feature-input" min="0" max="100" value="75" step="1">
+            </div>
+            <div>
+                <label>Study Consistency (activities/week):</label>
+                <input type="number" id="study_consistency" class="feature-input" min="0" max="10" value="3.5" step="0.5">
+            </div>
+            <div>
+                <label>Activity Completion Rate (%):</label>
+                <input type="number" id="completion_rate" class="feature-input" min="0" max="100" value="90" step="1">
+            </div>
+            <button onclick="predictManual()" class="btn">🎯 Predict Risk</button>
+            <div id="manual-result" class="result-card"></div>
+        </div>
+        
+        <!-- Student Risk Prediction -->
+        <div class="card">
+            <h2>👨‍🎓 Predict for Student</h2>
+            <select id="student-select">
+                <option value="">-- Select a student --</option>
+            </select>
+            <button onclick="predictStudent()" class="btn" id="predict-btn" disabled>📊 Predict for Selected Student</button>
+            <div id="student-result" class="result-card"></div>
+        </div>
+        
+        <!-- All Students Risk Report -->
+        <div class="card">
+            <h2>📋 All Students Risk Report</h2>
+            <button onclick="loadAllPredictions()" class="btn">📈 Generate Full Report</button>
+            <div id="all-results"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000/api/risk';
+        
+        // Check model status
+        async function checkModelStatus() {
+            const statusDiv = document.getElementById('model-status');
+            statusDiv.innerHTML = '<p class="loading">Checking model status...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+                
+                if (data.status === 'loaded') {
+                    statusDiv.innerHTML = `
+                        <div class="risk-low">
+                            <h3>✅ Model Loaded Successfully</h3>
+                            <p><strong>Model Type:</strong> ${data.model_type}</p>
+                            <p><strong>Features:</strong> ${data.features.join(', ')}</p>
+                            <p><strong>Classes:</strong> ${data.classes.join(', ')}</p>
+                        </div>
+                    `;
+                    
+                    // Load students for dropdown
+                    loadStudents();
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="risk-high">
+                            <h3>❌ Model Not Loaded</h3>
+                            <p>${data.message}</p>
+                            <p><strong>Expected file:</strong> ${data.expected_file}</p>
+                            <button onclick="window.location.href='/train'" class="btn">🛠️ Train Model</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Load students for dropdown
+        async function loadStudents() {
+            try {
+                const response = await fetch('http://localhost:8000/api/students');
+                const students = await response.json();
+                
+                const select = document.getElementById('student-select');
+                select.innerHTML = '<option value="">-- Select a student --</option>';
+                
+                students.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = `${student.name} (Grade ${student.grade})`;
+                    select.appendChild(option);
+                });
+                
+                // Enable predict button
+                document.getElementById('predict-btn').disabled = false;
+                
+            } catch (error) {
+                console.error('Failed to load students:', error);
+            }
+        }
+        
+        // Predict from manual input
+        async function predictManual() {
+            const resultDiv = document.getElementById('manual-result');
+            resultDiv.innerHTML = '<p class="loading">Making prediction...</p>';
+            
+            const features = {
+                attendance_rate: parseFloat(document.getElementById('attendance').value),
+                avg_score: parseFloat(document.getElementById('avg_score').value),
+                study_consistency: parseFloat(document.getElementById('study_consistency').value),
+                activity_completion_rate: parseFloat(document.getElementById('completion_rate').value)
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/predict/from-features`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(features)
+                });
+                
+                const result = await response.json();
+                
+                // Determine risk class
+                const riskClass = `risk-${result.predicted_risk}`;
+                
+                resultDiv.innerHTML = `
+                    <div class="${riskClass}">
+                        <h3>🎯 Prediction: ${result.predicted_risk.toUpperCase()} RISK</h3>
+                        <p><strong>Confidence:</strong> ${(result.confidence * 100).toFixed(1)}%</p>
+                        
+                        <h4>📊 Probabilities:</h4>
+                        <ul>
+                            ${Object.entries(result.probabilities).map(([risk, prob]) => 
+                                `<li>${risk}: ${(prob * 100).toFixed(1)}%</li>`
+                            ).join('')}
+                        </ul>
+                        
+                        <h4>💡 Recommendations:</h4>
+                        <div>
+                            ${result.recommendations.map(rec => 
+                                `<div class="recommendation">✅ ${rec}</div>`
+                            ).join('')}
+                        </div>
+                        
+                        <h4>📈 Features Used:</h4>
+                        <pre>${JSON.stringify(result.feature_values, null, 2)}</pre>
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Predict for selected student
+        async function predictStudent() {
+            const studentId = document.getElementById('student-select').value;
+            if (!studentId) return;
+            
+            const resultDiv = document.getElementById('student-result');
+            resultDiv.innerHTML = '<p class="loading">Predicting for student...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/predict/student/${studentId}`);
+                const result = await response.json();
+                
+                // Determine risk class
+                const riskClass = `risk-${result.predicted_risk}`;
+                
+                resultDiv.innerHTML = `
+                    <div class="${riskClass}">
+                        <h3>👨‍🎓 Student ID: ${result.student_id}</h3>
+                        <h3>🎯 Prediction: ${result.predicted_risk.toUpperCase()} RISK</h3>
+                        <p><strong>Confidence:</strong> ${(result.confidence * 100).toFixed(1)}%</p>
+                        
+                        <h4>💡 Recommendations:</h4>
+                        <div>
+                            ${result.recommendations.map(rec => 
+                                `<div class="recommendation">✅ ${rec}</div>`
+                            ).join('')}
+                        </div>
+                        
+                        <h4>📈 Student Features:</h4>
+                        <pre>${JSON.stringify(result.feature_values, null, 2)}</pre>
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Load all predictions
+        async function loadAllPredictions() {
+            const resultsDiv = document.getElementById('all-results');
+            resultsDiv.innerHTML = '<p class="loading">Generating report...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/predict/all-students`);
+                const report = await response.json();
+                
+                let html = `
+                    <div class="summary">
+                        <h3>📋 Risk Report Summary</h3>
+                        <p><strong>Total Students:</strong> ${report.total_students}</p>
+                        <p><strong>Predicted:</strong> ${report.predicted_students}</p>
+                        <p><span class="risk-high" style="padding: 5px 10px;">High Risk: ${report.high_risk_count}</span></p>
+                        <p><span class="risk-medium" style="padding: 5px 10px;">Medium Risk: ${report.medium_risk_count}</span></p>
+                        <p><span class="risk-low" style="padding: 5px 10px;">Low Risk: ${report.low_risk_count}</span></p>
+                    </div>
+                    
+                    <h3>👨‍🎓 Student Details</h3>
+                    <div class="student-list">
+                `;
+                
+                report.students.forEach(student => {
+                    const riskClass = `risk-${student.predicted_risk}`;
+                    html += `
+                        <div class="${riskClass} student-card" style="margin: 10px 0; padding: 15px;">
+                            <h4>${student.student_name} (Grade ${student.grade})</h4>
+                            <p><strong>Risk Level:</strong> ${student.predicted_risk.toUpperCase()}</p>
+                            <p><strong>Attendance:</strong> ${student.attendance_rate.toFixed(1)}%</p>
+                            <p><strong>Average Score:</strong> ${student.avg_score.toFixed(1)}%</p>
+                            <p><strong>Recommendations:</strong></p>
+                            <ul>
+                                ${student.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkModelStatus();
+        });
+    </script>
+</body>
+</html>

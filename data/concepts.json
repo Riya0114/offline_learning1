@@ -1,0 +1,34 @@
+{
+  "mathematics": {
+    "grade_5": [
+      {
+        "chapter": "Numbers and Operations",
+        "topics": ["Place Value", "Addition", "Subtraction", "Multiplication", "Division"],
+        "difficulty": "easy",
+        "estimated_time": 120,
+        "prerequisites": ["Basic counting"],
+        "resources": ["math_numbers.pdf", "operations_video.mp4"]
+      },
+      {
+        "chapter": "Fractions",
+        "topics": ["Understanding Fractions", "Equivalent Fractions", "Adding Fractions"],
+        "difficulty": "medium",
+        "estimated_time": 180,
+        "prerequisites": ["Division", "Multiplication"],
+        "resources": ["fractions_guide.pdf"]
+      }
+    ]
+  },
+  "science": {
+    "grade_5": [
+      {
+        "chapter": "Plants",
+        "topics": ["Parts of a Plant", "Photosynthesis", "Plant Life Cycle"],
+        "difficulty": "easy",
+        "estimated_time": 90,
+        "prerequisites": ["Basic biology"],
+        "resources": ["plants_science.pdf"]
+      }
+    ]
+  }
+}

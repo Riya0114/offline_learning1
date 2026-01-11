@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Tracking - Rural Learning</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fas fa-school"></i>
+            <h2>Rural Learning</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="students.html"><i class="fas fa-users"></i><span>Students</span></a></li>
+            <li class="active"><a href="attendance.html"><i class="fas fa-clipboard-check"></i><span>Attendance</span></a></li>
+            <li><a href="syllabus.html"><i class="fas fa-book-open"></i><span>Syllabus</span></a></li>
+            <li><a href="learning.html"><i class="fas fa-graduation-cap"></i><span>Learning</span></a></li>
+            <li><a href="analytics.html"><i class="fas fa-chart-bar"></i><span>Analytics</span></a></li>
+            <li><a href="offline.html"><i class="fas fa-download"></i><span>Offline Content</span></a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="date-selector">
+                <button onclick="changeDate(-1)"><i class="fas fa-chevron-left"></i></button>
+                <input type="date" id="attendance-date" value="${new Date().toISOString().split('T')[0]}">
+                <button onclick="changeDate(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <button class="btn-primary" onclick="markAllPresent()">
+                <i class="fas fa-check-circle"></i> Mark All Present
+            </button>
+        </header>
+
+        <div class="dashboard-container">
+            <div class="section-header">
+                <h1>Attendance Tracking</h1>
+                <div class="attendance-summary">
+                    <span class="summary-item present">
+                        <i class="fas fa-check-circle"></i>
+                        <span id="present-count">0</span> Present
+                    </span>
+                    <span class="summary-item absent">
+                        <i class="fas fa-times-circle"></i>
+                        <span id="absent-count">0</span> Absent
+                    </span>
+                    <span class="summary-item total">
+                        <i class="fas fa-users"></i>
+                        <span id="total-count">0</span> Total
+                    </span>
+                </div>
+            </div>
+
+            <!-- Attendance Filters -->
+            <div class="filters-container">
+                <select id="filter-grade-attendance" onchange="filterAttendance()">
+                    <option value="">All Grades</option>
+                    <option value="1">Grade 1</option>
+                    <option value="2">Grade 2</option>
+                    <option value="3">Grade 3</option>
+                    <option value="4">Grade 4</option>
+                    <option value="5">Grade 5</option>
+                </select>
+                <select id="filter-subject" onchange="filterAttendance()">
+                    <option value="">All Subjects</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Science">Science</option>
+                    <option value="English">English</option>
+                    <option value="Social Studies">Social Studies</option>
+                </select>
+                <button class="btn-secondary" onclick="clearFilters()">
+                    <i class="fas fa-filter"></i> Clear Filters
+                </button>
+            </div>
+
+            <!-- Attendance Table -->
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Grade</th>
+                            <th>Village</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-table-body">
+                        <tr>
+                            <td colspan="7" class="loading">Loading attendance data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Attendance Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-pie"></i> Attendance Distribution</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="attendance-chart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-line"></i> Weekly Trend</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="trend-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Report -->
+            <div class="report-section">
+                <div class="section-header">
+                    <h2>Monthly Attendance Report</h2>
+                    <button class="btn-secondary" onclick="exportAttendanceReport()">
+                        <i class="fas fa-download"></i> Export Report
+                    </button>
+                </div>
+                <div id="monthly-report" class="loading">
+                    Loading monthly report...
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Attendance Modal -->
+    <div id="attendance-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Mark Attendance</h2>
+                <button class="close-modal" onclick="closeAttendanceModal()">&times;</button>
+            </div>
+            <div id="attendance-modal-content">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+    <script src="attendance.js"></script>
+</body>
+</html>
